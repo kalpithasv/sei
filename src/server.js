@@ -34,8 +34,8 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve static files from the build directory
+app.use(express.static(path.join(__dirname, '../build')));
 
 // Initialize Sei MCP Client
 const seiClient = new SeiMCPClient();
@@ -64,9 +64,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// Serve React app for all non-API routes
+app.get('*', (req, res) => {
+  // Don't serve the React app for API routes
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../build/index.html'));
+  } else {
+    next();
+  }
 });
 
 // Socket.io connection handling
